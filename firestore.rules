@@ -1,0 +1,261 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Core Identity & Validation Primitives
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isVerifiedUser() && request.auth.uid == userId;
+    }
+
+    function isVerifiedAdminEmail() {
+      return isVerifiedUser() && request.auth.token.email == 'Vaibhavbaghel61@gmail.com';
+    }
+
+    function isAdmin() {
+      return isVerifiedAdminEmail() || (
+        isVerifiedUser() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidUnit(u) {
+      return u is string && (u == 'pcs' || u == 'kg' || u == 'litre' || u == 'packet');
+    }
+
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll(['uid', 'email', 'displayName', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'email', 'displayName', 'createdAt', 'updatedAt'])
+        && data.uid is string
+        && data.uid == userId
+        && data.uid == request.auth.uid
+        && data.email is string
+        && data.email.size() >= 3
+        && data.email.size() <= 200
+        && data.displayName is string
+        && data.displayName.size() >= 1
+        && data.displayName.size() <= 120
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidProduct(data, userId, productId) {
+      return data.keys().hasAll([
+          'id', 'ownerId', 'name', 'quantity', 'unit',
+          'lowStockThreshold', 'history', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'ownerId', 'name', 'quantity', 'unit',
+          'lowStockThreshold', 'price', 'history', 'createdAt', 'updatedAt'
+        ])
+        && data.id is string
+        && data.id == productId
+        && isValidId(data.id)
+        && data.ownerId is string
+        && data.ownerId == userId
+        && data.ownerId == request.auth.uid
+        && data.name is string
+        && data.name.size() >= 1
+        && data.name.size() <= 120
+        && data.quantity is number
+        && data.quantity >= 0
+        && isValidUnit(data.unit)
+        && data.lowStockThreshold is number
+        && data.lowStockThreshold >= 0
+        && (!('price' in data) || (data.price is number && data.price >= 0))
+        && data.history is list
+        && data.history.size() <= 50
+        && (data.history.size() == 0 || data.history[0] is map)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidSale(data, userId, saleId) {
+      return data.keys().hasAll([
+          'id', 'ownerId', 'productId', 'productName', 'unit', 'quantity', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'ownerId', 'productId', 'productName', 'unit',
+          'quantity', 'unitPrice', 'totalAmount', 'createdAt'
+        ])
+        && data.id is string
+        && data.id == saleId
+        && isValidId(data.id)
+        && data.ownerId is string
+        && data.ownerId == userId
+        && data.ownerId == request.auth.uid
+        && data.productId is string
+        && isValidId(data.productId)
+        && data.productName is string
+        && data.productName.size() >= 1
+        && data.productName.size() <= 120
+        && isValidUnit(data.unit)
+        && data.quantity is number
+        && data.quantity > 0
+        && (!('unitPrice' in data) || (data.unitPrice is number && data.unitPrice >= 0))
+        && (!('totalAmount' in data) || (data.totalAmount is number && data.totalAmount >= 0))
+        && data.createdAt is timestamp;
+    }
+
+    function isValidDemoBooking(data, bookingId) {
+      return data.keys().hasAll([
+          'id', 'ownerId', 'shopName', 'ownerName', 'phone', 'locality', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'ownerId', 'shopName', 'ownerName', 'phone', 'locality', 'createdAt'
+        ])
+        && data.id is string
+        && data.id == bookingId
+        && isValidId(data.id)
+        && data.ownerId is string
+        && data.ownerId == request.auth.uid
+        && data.shopName is string
+        && data.shopName.size() >= 1
+        && data.shopName.size() <= 120
+        && data.ownerName is string
+        && data.ownerName.size() >= 1
+        && data.ownerName.size() <= 120
+        && data.phone is string
+        && data.phone.size() >= 7
+        && data.phone.size() <= 20
+        && data.locality is string
+        && data.locality.size() >= 1
+        && data.locality.size() <= 120
+        && data.createdAt is timestamp;
+    }
+
+    function isValidPilotFeedback(data, feedbackId) {
+      return data.keys().hasAll([
+          'id', 'ownerId', 'easyToAdd', 'useDaily', 'pay199', 'comment', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'ownerId', 'easyToAdd', 'useDaily', 'pay199', 'comment', 'createdAt'
+        ])
+        && data.id is string
+        && data.id == feedbackId
+        && isValidId(data.id)
+        && data.ownerId is string
+        && data.ownerId == request.auth.uid
+        && data.easyToAdd is string
+        && (data.easyToAdd == 'yes' || data.easyToAdd == 'no')
+        && data.useDaily is string
+        && (data.useDaily == 'yes' || data.useDaily == 'maybe' || data.useDaily == 'no')
+        && data.pay199 is string
+        && (data.pay199 == 'yes' || data.pay199 == 'maybe' || data.pay199 == 'no')
+        && data.comment is string
+        && data.comment.size() <= 500
+        && data.createdAt is timestamp;
+    }
+
+    // Private User Profile + Subcollections
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if false;
+      allow create: if isValidId(userId)
+        && isOwner(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId)
+        && isOwner(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['email', 'displayName', 'updatedAt']);
+      allow delete: if false;
+
+      match /products/{productId} {
+        allow get: if isValidId(userId) && isValidId(productId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId) && existing().ownerId == request.auth.uid;
+        allow create: if isValidId(userId)
+          && isValidId(productId)
+          && isOwner(userId)
+          && isValidProduct(incoming(), userId, productId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+        allow update: if isValidId(userId)
+          && isValidId(productId)
+          && isOwner(userId)
+          && isValidProduct(incoming(), userId, productId)
+          && incoming().id == existing().id
+          && incoming().ownerId == existing().ownerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && (
+            incoming().diff(existing()).affectedKeys().hasOnly(['quantity', 'history', 'updatedAt']) ||
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'name', 'quantity', 'unit', 'lowStockThreshold', 'price', 'history', 'updatedAt'
+            ])
+          );
+        allow delete: if isValidId(userId) && isValidId(productId) && isOwner(userId);
+      }
+
+      match /sales/{saleId} {
+        allow get: if isValidId(userId) && isValidId(saleId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId) && existing().ownerId == request.auth.uid;
+        allow create: if isValidId(userId)
+          && isValidId(saleId)
+          && isOwner(userId)
+          && isValidSale(incoming(), userId, saleId)
+          && incoming().createdAt == request.time;
+        allow update: if false;
+        allow delete: if isValidId(userId) && isValidId(saleId) && isOwner(userId);
+      }
+    }
+
+    // Demo Bookings (Owner or Verified Founder Admin)
+    match /demoBookings/{bookingId} {
+      allow get: if isValidId(bookingId)
+        && isVerifiedUser()
+        && (existing().ownerId == request.auth.uid || isAdmin());
+      allow list: if isVerifiedUser()
+        && (existing().ownerId == request.auth.uid || isVerifiedAdminEmail());
+      allow create: if isValidId(bookingId)
+        && isVerifiedUser()
+        && isValidDemoBooking(incoming(), bookingId)
+        && incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if isValidId(bookingId) && isAdmin();
+    }
+
+    // Pilot Feedback (Owner or Verified Founder Admin)
+    match /pilotFeedback/{feedbackId} {
+      allow get: if isValidId(feedbackId)
+        && isVerifiedUser()
+        && (existing().ownerId == request.auth.uid || isAdmin());
+      allow list: if isVerifiedUser()
+        && (existing().ownerId == request.auth.uid || isVerifiedAdminEmail());
+      allow create: if isValidId(feedbackId)
+        && isVerifiedUser()
+        && isValidPilotFeedback(incoming(), feedbackId)
+        && incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if isValidId(feedbackId) && isAdmin();
+    }
+  }
+}

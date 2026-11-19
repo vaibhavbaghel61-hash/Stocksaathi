@@ -1,0 +1,6 @@
+{
+  "name": "StockSaathi",
+  "description": "Simple offline-first inventory and stock register for kirana stores in Selaqui and Dehradun.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

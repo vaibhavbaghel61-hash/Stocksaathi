@@ -1,0 +1,274 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Private kirana shopkeeper account profile linked to Google Sign-In.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "minLength": 3,
+          "maxLength": 200
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "email", "displayName", "createdAt", "updatedAt"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "An inventory item in a shopkeeper's StockSaathi register.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "quantity": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string",
+          "enum": ["pcs", "kg", "litre", "packet"]
+        },
+        "lowStockThreshold": {
+          "type": "number"
+        },
+        "price": {
+          "type": "number"
+        },
+        "history": {
+          "type": "array"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "ownerId",
+        "name",
+        "quantity",
+        "unit",
+        "lowStockThreshold",
+        "history",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "SaleRecord": {
+      "title": "SaleRecord",
+      "description": "A recorded sale event that deducts stock.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "productId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "productName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "unit": {
+          "type": "string",
+          "enum": ["pcs", "kg", "litre", "packet"]
+        },
+        "quantity": {
+          "type": "number"
+        },
+        "unitPrice": {
+          "type": "number"
+        },
+        "totalAmount": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "ownerId",
+        "productId",
+        "productName",
+        "unit",
+        "quantity",
+        "createdAt"
+      ]
+    },
+    "DemoBooking": {
+      "title": "DemoBooking",
+      "description": "A free 10-minute demo request submitted by a shopkeeper.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "shopName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "ownerName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "phone": {
+          "type": "string",
+          "minLength": 7,
+          "maxLength": 20
+        },
+        "locality": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "ownerId",
+        "shopName",
+        "ownerName",
+        "phone",
+        "locality",
+        "createdAt"
+      ]
+    },
+    "PilotFeedback": {
+      "title": "PilotFeedback",
+      "description": "Pilot shopkeeper feedback response.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "easyToAdd": {
+          "type": "string",
+          "enum": ["yes", "no"]
+        },
+        "useDaily": {
+          "type": "string",
+          "enum": ["yes", "maybe", "no"]
+        },
+        "pay199": {
+          "type": "string",
+          "enum": ["yes", "maybe", "no"]
+        },
+        "comment": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "ownerId",
+        "easyToAdd",
+        "useDaily",
+        "pay199",
+        "comment",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private authenticated shopkeeper profile (strictly owner-only read/write)."
+    },
+    "/users/{userId}/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Shopkeeper inventory products scoped to authenticated userId."
+    },
+    "/users/{userId}/sales/{saleId}": {
+      "schema": { "$ref": "#/entities/SaleRecord" },
+      "description": "Shopkeeper recorded sales scoped to authenticated userId."
+    },
+    "/demoBookings/{bookingId}": {
+      "schema": { "$ref": "#/entities/DemoBooking" },
+      "description": "Pilot demo booking leads readable by owner or verified founder admin."
+    },
+    "/pilotFeedback/{feedbackId}": {
+      "schema": { "$ref": "#/entities/PilotFeedback" },
+      "description": "Pilot feedback responses readable by owner or verified founder admin."
+    }
+  }
+}
